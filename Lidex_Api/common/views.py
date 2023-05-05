@@ -4,6 +4,9 @@ from django.http import JsonResponse
 import json
 from db import dbconn
 from random import randint
+from django.conf import settings
+from django.core.mail import send_mail
+
 
 # Create your views here.
 
@@ -30,7 +33,20 @@ def sign_up(request):
                             "password":password
                             
                             }
+                
+                email = userdata['email']
                 dbconn.clnadmin.insert_one(new_admin)
+
+                email_subject = 'account password'
+                email_content = password
+                
+
+                send_mail(
+                    email_subject,
+                    email_content,
+                    settings.EMAIL_HOST_USER,
+                    [email,]
+                )
                 
             elif userdata['employ_type'] == 'user':
                 randnumber = randint(1111,9999)
@@ -46,7 +62,18 @@ def sign_up(request):
                             "password":password
                             }
                 
+                email = userdata['email']
                 dbconn.clnuser.insert_one(new_user)
+                email_subject = 'account password'
+                email_content = password
+                
+
+                send_mail(
+                    email_subject,
+                    email_content,
+                    settings.EMAIL_HOST_USER,
+                    [email,]
+                )
             else:
                 return JsonResponse({'statuscode': 400, 'message': 'Invalid user type'})
     
@@ -72,6 +99,7 @@ def email_check(request):
         return JsonResponse(True,safe=False)
     else:
         return JsonResponse(False,safe=False)
+    
 
 @api_view(['POST'])
 def admin_login(request):
@@ -83,9 +111,9 @@ def admin_login(request):
 
     if admin_obj:
         name = admin_obj['firstname']+" "+admin_obj['lastname']
-        user_id = str(admin_obj['_id'])
+        admin_id = str(admin_obj['_id'])
         
-        return JsonResponse({'statuscode':200,'name':name,'user_id':user_id})
+        return JsonResponse({'statuscode':200,'name':name,'admin_id':admin_id})
     else:
         return JsonResponse({'statuscode':400})
 
